@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
 )
 
@@ -12,6 +13,7 @@ func main() {
 	router.GET("/hello", helloHandler)
 	router.GET("/books/:id/:title", booksHandler)
 	router.GET("/query", queryHandler)
+	router.POST("/books", postBooksHandler)
 
 	router.Run(":5000")
 }
@@ -40,4 +42,28 @@ func queryHandler(ctx *gin.Context) {
 	id := ctx.Query("id")
 	title := ctx.Query("title")
 	ctx.JSON(http.StatusOK, gin.H{"id": id, "title": title})
+}
+
+type BookInput struct {
+	Title    string
+	Price    int
+	SubTitle string `json:"sub_title"`
+}
+
+func postBooksHandler(ctx *gin.Context) {
+	var bookInput BookInput
+
+	err := ctx.ShouldBindJSON(&bookInput)
+	if err != nil {
+		log.Print(err)
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+	} else {
+		ctx.JSON(http.StatusOK, gin.H{
+			"title":     bookInput.Title,
+			"price":     bookInput.Price,
+			"sub_title": bookInput.SubTitle,
+		})
+	}
 }
