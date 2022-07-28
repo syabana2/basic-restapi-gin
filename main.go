@@ -1,9 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 func main() {
@@ -45,25 +49,47 @@ func queryHandler(ctx *gin.Context) {
 }
 
 type BookInput struct {
-	Title    string
-	Price    int
-	SubTitle string `json:"sub_title"`
+	Title    string      `json:"title" binding:"required"`
+	Price    interface{} `json:"price" binding:"required,number"`
+	SubTitle string      `json:"sub_title"`
 }
 
 func postBooksHandler(ctx *gin.Context) {
 	var bookInput BookInput
+	var price int64
 
-	err := ctx.ShouldBindJSON(&bookInput)
+	err := ctx.BindJSON(&bookInput)
 	if err != nil {
-		log.Print(err)
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-	} else {
-		ctx.JSON(http.StatusOK, gin.H{
-			"title":     bookInput.Title,
-			"price":     bookInput.Price,
-			"sub_title": bookInput.SubTitle,
-		})
+		_, status := err.(*json.SyntaxError)
+		if status {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": err.Error(),
+			})
+			return
+		} else {
+			for _, e := range err.(validator.ValidationErrors) {
+				errorMessage := fmt.Sprintf("Error on field %s, condition: %s", e.Field(), e.ActualTag())
+				ctx.JSON(http.StatusBadRequest, gin.H{
+					"message": errorMessage,
+				})
+				return
+			}
+		}
 	}
+
+	_, status := bookInput.Price.(string)
+	if status {
+		price, err = strconv.ParseInt(bookInput.Price.(string), 10, 64)
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		price = int64(bookInput.Price.(float64))
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"title":     bookInput.Title,
+		"price":     price,
+		"sub_title": bookInput.SubTitle,
+	})
 }
