@@ -70,6 +70,15 @@ func main() {
 	err = db.Save(&dataUpdateBook).Error
 	helper.FatalIfError(err)
 
+	// Delete
+	var deleteDataBook book.Book
+
+	err = db.Debug().Where("id = ?", 1).First(&deleteDataBook).Error
+	helper.FatalIfError(err)
+
+	err = db.Delete(&deleteDataBook).Error
+	helper.FatalIfError(err)
+
 	router := gin.Default()
 
 	v1 := router.Group("/v1")
