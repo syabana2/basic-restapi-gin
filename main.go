@@ -1,6 +1,7 @@
 package main
 
 import (
+	"basic-rest-api-gin/book"
 	"basic-rest-api-gin/handler"
 	"basic-rest-api-gin/helper"
 	"fmt"
@@ -20,21 +21,19 @@ func main() {
 	password := os.Getenv("PASSWORD")
 	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")
-	dbName := os.Getenv("GB_NAME")
+	dbName := os.Getenv("DB_NAME")
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		username, password, host, port, dbName)
-	_, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("DB Connection error." + err.Error())
 	}
-
-	log.Println("Database Connection succeed")
+	db.AutoMigrate(&book.Book{})
 
 	router := gin.Default()
 
 	v1 := router.Group("/v1")
-
 	v1.GET("/", handler.RootHandler)
 	v1.GET("/hello", handler.HelloHandler)
 	v1.GET("/books/:id/:title", handler.BooksHandler)
