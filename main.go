@@ -29,7 +29,18 @@ func main() {
 	if err != nil {
 		log.Fatal("DB Connection error." + err.Error())
 	}
-	db.AutoMigrate(&book.Book{})
+	err = db.AutoMigrate(&book.Book{})
+	helper.FatalIfError(err)
+
+	bookData := book.Book{}
+	bookData.Title = "Gundam Blood Orphan 2"
+	bookData.Price = 20000
+	bookData.Discount = 5
+	bookData.Rating = 8
+	bookData.Description = "Ini buku bagus banget banget gais"
+
+	err = db.Create(&bookData).Error
+	helper.FatalIfError(err)
 
 	router := gin.Default()
 
