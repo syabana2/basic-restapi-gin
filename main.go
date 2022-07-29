@@ -32,15 +32,31 @@ func main() {
 	err = db.AutoMigrate(&book.Book{})
 	helper.FatalIfError(err)
 
-	bookData := book.Book{}
-	bookData.Title = "Gundam Blood Orphan 2"
-	bookData.Price = 20000
-	bookData.Discount = 5
-	bookData.Rating = 8
-	bookData.Description = "Ini buku bagus banget banget gais"
+	createDataBook := book.Book{}
+	createDataBook.Title = "Gundam Blood Orphan 2"
+	createDataBook.Price = 20000
+	createDataBook.Discount = 5
+	createDataBook.Rating = 8
+	createDataBook.Description = "Ini buku bagus banget banget gais"
 
-	err = db.Create(&bookData).Error
+	err = db.Create(&createDataBook).Error
 	helper.FatalIfError(err)
+
+	var dataBook book.Book
+
+	err = db.Debug().First(&dataBook, 2).Error
+	helper.FatalIfError(err)
+
+	log.Println("Title: " + dataBook.Title)
+
+	var dataBooks []book.Book
+
+	err = db.Debug().Where("title like ?", "%Gundam Blood Orphan%").Find(&dataBooks).Error
+	helper.FatalIfError(err)
+
+	for _, b := range dataBooks {
+		log.Println("Title: " + b.Title)
+	}
 
 	router := gin.Default()
 
