@@ -2,11 +2,11 @@ package handler
 
 import (
 	"basic-rest-api-gin/book"
+	"basic-rest-api-gin/helper"
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -65,9 +65,7 @@ func PostBooksHandler(ctx *gin.Context) {
 	_, status := bookInput.Price.(string)
 	if status {
 		price, err = strconv.ParseInt(bookInput.Price.(string), 10, 64)
-		if err != nil {
-			log.Fatal(err)
-		}
+		helper.FatalIfError(err)
 	} else {
 		price = int64(bookInput.Price.(float64))
 	}
