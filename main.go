@@ -67,13 +67,15 @@ func postBooksHandler(ctx *gin.Context) {
 			})
 			return
 		} else {
+			var errorMessages []string
 			for _, e := range err.(validator.ValidationErrors) {
 				errorMessage := fmt.Sprintf("Error on field %s, condition: %s", e.Field(), e.ActualTag())
-				ctx.JSON(http.StatusBadRequest, gin.H{
-					"message": errorMessage,
-				})
-				return
+				errorMessages = append(errorMessages, errorMessage)
 			}
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"message": errorMessages,
+			})
+			return
 		}
 	}
 
