@@ -32,52 +32,7 @@ func main() {
 	err = db.AutoMigrate(&book.Book{})
 	helper.FatalIfError(err)
 
-	// Create
-	createDataBook := book.Book{}
-	createDataBook.Title = "Gundam Blood Orphan 2"
-	createDataBook.Price = 20000
-	createDataBook.Discount = 5
-	createDataBook.Rating = 8
-	createDataBook.Description = "Ini buku bagus banget banget gais"
-
-	err = db.Create(&createDataBook).Error
-	helper.FatalIfError(err)
-
-	// Read
-	var dataBook book.Book
-
-	err = db.Debug().First(&dataBook, 2).Error
-	helper.FatalIfError(err)
-
-	log.Println("Title: " + dataBook.Title)
-
-	var dataBooks []book.Book
-
-	err = db.Debug().Where("title like ?", "%Gundam Blood Orphan%").Find(&dataBooks).Error
-	helper.FatalIfError(err)
-
-	for _, b := range dataBooks {
-		log.Println("Title: " + b.Title)
-	}
-
-	// Update
-	var dataUpdateBook book.Book
-
-	err = db.Debug().Where("id = ?", 1).First(&dataUpdateBook).Error
-	helper.FatalIfError(err)
-
-	dataUpdateBook.Title = "Gundam Revised"
-	err = db.Save(&dataUpdateBook).Error
-	helper.FatalIfError(err)
-
-	// Delete
-	var deleteDataBook book.Book
-
-	err = db.Debug().Where("id = ?", 1).First(&deleteDataBook).Error
-	helper.FatalIfError(err)
-
-	err = db.Delete(&deleteDataBook).Error
-	helper.FatalIfError(err)
+	//bookRepository := book.NewRepository(db)
 
 	router := gin.Default()
 
