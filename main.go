@@ -32,6 +32,7 @@ func main() {
 	err = db.AutoMigrate(&book.Book{})
 	helper.FatalIfError(err)
 
+	// Create
 	createDataBook := book.Book{}
 	createDataBook.Title = "Gundam Blood Orphan 2"
 	createDataBook.Price = 20000
@@ -42,6 +43,7 @@ func main() {
 	err = db.Create(&createDataBook).Error
 	helper.FatalIfError(err)
 
+	// Read
 	var dataBook book.Book
 
 	err = db.Debug().First(&dataBook, 2).Error
@@ -57,6 +59,16 @@ func main() {
 	for _, b := range dataBooks {
 		log.Println("Title: " + b.Title)
 	}
+
+	// Update
+	var dataUpdateBook book.Book
+
+	err = db.Debug().Where("id = ?", 1).First(&dataUpdateBook).Error
+	helper.FatalIfError(err)
+
+	dataUpdateBook.Title = "Gundam Revised"
+	err = db.Save(&dataUpdateBook).Error
+	helper.FatalIfError(err)
 
 	router := gin.Default()
 
