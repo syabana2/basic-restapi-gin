@@ -13,11 +13,13 @@ import (
 func main() {
 	router := gin.Default()
 
-	router.GET("/", rootHandler)
-	router.GET("/hello", helloHandler)
-	router.GET("/books/:id/:title", booksHandler)
-	router.GET("/query", queryHandler)
-	router.POST("/books", postBooksHandler)
+	v1 := router.Group("/v1")
+
+	v1.GET("/", rootHandler)
+	v1.GET("/hello", helloHandler)
+	v1.GET("/books/:id/:title", booksHandler)
+	v1.GET("/query", queryHandler)
+	v1.POST("/books", postBooksHandler)
 
 	router.Run(":5000")
 }
@@ -49,9 +51,9 @@ func queryHandler(ctx *gin.Context) {
 }
 
 type BookInput struct {
-	Title    string      `json:"title" binding:"required"`
-	Price    interface{} `json:"price" binding:"required,number"`
-	SubTitle string      `json:"sub_title"`
+	Title string      `json:"title" binding:"required"`
+	Price interface{} `json:"price" binding:"required,number"`
+	//SubTitle string      `json:"sub_title"`
 }
 
 func postBooksHandler(ctx *gin.Context) {
@@ -90,8 +92,8 @@ func postBooksHandler(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"title":     bookInput.Title,
-		"price":     price,
-		"sub_title": bookInput.SubTitle,
+		"title": bookInput.Title,
+		"price": price,
+		//"sub_title": bookInput.SubTitle,
 	})
 }
