@@ -38,10 +38,10 @@ func QueryHandler(ctx *gin.Context) {
 }
 
 func PostBooksHandler(ctx *gin.Context) {
-	var bookInput book.Input
+	var bookInput book.Request
 	var price int64
 
-	err := ctx.BindJSON(&bookInput)
+	err := ctx.ShouldBindJSON(&bookInput)
 	if err != nil {
 		_, status := err.(*json.SyntaxError)
 		if status {

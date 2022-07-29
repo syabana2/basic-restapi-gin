@@ -32,7 +32,16 @@ func main() {
 	err = db.AutoMigrate(&book.Book{})
 	helper.FatalIfError(err)
 
-	//bookRepository := book.NewRepository(db)
+	bookRepository := book.NewRepository(db)
+	bookService := book.NewService(bookRepository)
+
+	bookRequest := book.Request{
+		Title: "Sontoloyo",
+		Price: 30000,
+	}
+
+	_, err = bookService.Create(bookRequest)
+	helper.FatalIfError(err)
 
 	router := gin.Default()
 
