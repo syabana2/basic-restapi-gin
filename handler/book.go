@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -20,41 +19,69 @@ func NewBookHandler(bookService book.Service) *bookHandler {
 	return &bookHandler{bookService}
 }
 
-func (h *bookHandler) RootHandler(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"name": "Rizki Syaban Aryanto",
-		"bio":  "Software Engineer",
+func (h *bookHandler) GetBooksHandler(c *gin.Context) {
+	books, err := h.bookService.FindAll()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	var booksResponse []book.Response
+
+	for _, b := range books {
+		bookResponse := book.Response{
+			ID:          b.ID,
+			Title:       b.Title,
+			Description: b.Description,
+			Price:       b.Price,
+			Rating:      b.Rating,
+			Discount:    b.Discount,
+		}
+		booksResponse = append(booksResponse, bookResponse)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": booksResponse,
 	})
 }
 
-func (h *bookHandler) HelloHandler(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{
-		"title":    "Hello World",
-		"subtitle": "Belajar Golang API",
+func (h *bookHandler) GetBookHandler(c *gin.Context) {
+	idString := c.Param("id")
+	id, _ := strconv.Atoi(idString)
+
+	dataBook, err := h.bookService.FindByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	bookResponse := book.Response{
+		ID:          dataBook.ID,
+		Title:       dataBook.Title,
+		Description: dataBook.Description,
+		Price:       dataBook.Price,
+		Rating:      dataBook.Rating,
+		Discount:    dataBook.Discount,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data": bookResponse,
 	})
+
 }
 
-func (h *bookHandler) BooksHandler(ctx *gin.Context) {
-	id := ctx.Param("id")
-	title := ctx.Param("title")
-	ctx.JSON(http.StatusOK, gin.H{"id": id, "title": title})
-}
-
-func (h *bookHandler) QueryHandler(ctx *gin.Context) {
-	id := ctx.Query("id")
-	title := ctx.Query("title")
-	ctx.JSON(http.StatusOK, gin.H{"id": id, "title": title})
-}
-
-func (h *bookHandler) PostBooksHandler(ctx *gin.Context) {
+func (h *bookHandler) PostBooksHandler(c *gin.Context) {
 	var bookRequest book.Request
-	var price int64
 
-	err := ctx.ShouldBindJSON(&bookRequest)
+	err := c.ShouldBindJSON(&bookRequest)
 	if err != nil {
 		_, status := err.(*json.SyntaxError)
 		if status {
-			ctx.JSON(http.StatusBadRequest, gin.H{
+			c.JSON(http.StatusBadRequest, gin.H{
 				"message": err.Error(),
 			})
 			return
@@ -64,34 +91,39 @@ func (h *bookHandler) PostBooksHandler(ctx *gin.Context) {
 				errorMessage := fmt.Sprintf("Error on field %s, condition: %s", e.Field(), e.ActualTag())
 				errorMessages = append(errorMessages, errorMessage)
 			}
-			ctx.JSON(http.StatusBadRequest, gin.H{
+			c.JSON(http.StatusBadRequest, gin.H{
 				"message": errorMessages,
 			})
 			return
 		}
 	}
 
-	_, status := bookRequest.Price.(string)
-	if status {
-		price, err = strconv.ParseInt(bookRequest.Price.(string), 10, 64)
-		helper.FatalIfError(err)
-	} else {
-		price = int64(bookRequest.Price.(float64))
-	}
+	price := helper.ConvertInterfaceToInt(bookRequest.Price)
+	rating := helper.ConvertInterfaceToInt(bookRequest.Rating)
+	discount := helper.ConvertInterfaceToInt(bookRequest.Discount)
 
-	book, err := h.bookService.Create(bookRequest)
+	dataBook, err := h.bookService.Create(bookRequest)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),
 		})
 		return
 	}
 
-	log.Println(price)
+	var bookResponse book.Response
 
-	ctx.JSON(http.StatusOK, gin.H{
+	bookResponse = book.Response{
+		ID:          dataBook.ID,
+		Title:       dataBook.Title,
+		Description: dataBook.Description,
+		Price:       price,
+		Rating:      rating,
+		Discount:    discount,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
 		"code":   http.StatusOK,
 		"status": "success",
-		"data":   book,
+		"data":   bookResponse,
 	})
 }
