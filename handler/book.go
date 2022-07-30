@@ -7,41 +7,50 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"log"
 	"net/http"
 	"strconv"
 )
 
-func RootHandler(ctx *gin.Context) {
+type bookHandler struct {
+	bookService book.Service
+}
+
+func NewBookHandler(bookService book.Service) *bookHandler {
+	return &bookHandler{bookService}
+}
+
+func (h *bookHandler) RootHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"name": "Rizki Syaban Aryanto",
 		"bio":  "Software Engineer",
 	})
 }
 
-func HelloHandler(ctx *gin.Context) {
+func (h *bookHandler) HelloHandler(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"title":    "Hello World",
 		"subtitle": "Belajar Golang API",
 	})
 }
 
-func BooksHandler(ctx *gin.Context) {
+func (h *bookHandler) BooksHandler(ctx *gin.Context) {
 	id := ctx.Param("id")
 	title := ctx.Param("title")
 	ctx.JSON(http.StatusOK, gin.H{"id": id, "title": title})
 }
 
-func QueryHandler(ctx *gin.Context) {
+func (h *bookHandler) QueryHandler(ctx *gin.Context) {
 	id := ctx.Query("id")
 	title := ctx.Query("title")
 	ctx.JSON(http.StatusOK, gin.H{"id": id, "title": title})
 }
 
-func PostBooksHandler(ctx *gin.Context) {
-	var bookInput book.Request
+func (h *bookHandler) PostBooksHandler(ctx *gin.Context) {
+	var bookRequest book.Request
 	var price int64
 
-	err := ctx.ShouldBindJSON(&bookInput)
+	err := ctx.ShouldBindJSON(&bookRequest)
 	if err != nil {
 		_, status := err.(*json.SyntaxError)
 		if status {
@@ -62,17 +71,27 @@ func PostBooksHandler(ctx *gin.Context) {
 		}
 	}
 
-	_, status := bookInput.Price.(string)
+	_, status := bookRequest.Price.(string)
 	if status {
-		price, err = strconv.ParseInt(bookInput.Price.(string), 10, 64)
+		price, err = strconv.ParseInt(bookRequest.Price.(string), 10, 64)
 		helper.FatalIfError(err)
 	} else {
-		price = int64(bookInput.Price.(float64))
+		price = int64(bookRequest.Price.(float64))
 	}
 
+	book, err := h.bookService.Create(bookRequest)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	log.Println(price)
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"title": bookInput.Title,
-		"price": price,
-		//"sub_title": bookInput.SubTitle,
+		"code":   http.StatusOK,
+		"status": "success",
+		"data":   book,
 	})
 }
