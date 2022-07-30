@@ -60,7 +60,7 @@ func (h *bookHandler) GetBookHandler(c *gin.Context) {
 
 }
 
-func (h *bookHandler) PostBooksHandler(c *gin.Context) {
+func (h *bookHandler) PostBookHandler(c *gin.Context) {
 	var bookRequest book.Request
 
 	err := c.ShouldBindJSON(&bookRequest)
@@ -89,6 +89,63 @@ func (h *bookHandler) PostBooksHandler(c *gin.Context) {
 	discount := helper.ConvertInterfaceToInt(bookRequest.Discount)
 
 	dataBook, err := h.bookService.Create(bookRequest)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": err.Error(),
+		})
+		return
+	}
+
+	var bookResponse book.Response
+
+	bookResponse = book.Response{
+		ID:          dataBook.ID,
+		Title:       dataBook.Title,
+		Description: dataBook.Description,
+		Price:       price,
+		Rating:      rating,
+		Discount:    discount,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":   http.StatusOK,
+		"status": "success",
+		"data":   bookResponse,
+	})
+}
+
+func (h *bookHandler) PutBookHandler(c *gin.Context) {
+	var bookRequest book.Request
+
+	err := c.ShouldBindJSON(&bookRequest)
+	if err != nil {
+		_, status := err.(*json.SyntaxError)
+		if status {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": err.Error(),
+			})
+			return
+		} else {
+			var errorMessages []string
+			for _, e := range err.(validator.ValidationErrors) {
+				errorMessage := fmt.Sprintf("Error on field %s, condition: %s", e.Field(), e.ActualTag())
+				errorMessages = append(errorMessages, errorMessage)
+			}
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": errorMessages,
+			})
+			return
+		}
+	}
+
+	price := helper.ConvertInterfaceToInt(bookRequest.Price)
+	rating := helper.ConvertInterfaceToInt(bookRequest.Rating)
+	discount := helper.ConvertInterfaceToInt(bookRequest.Discount)
+
+	idString := c.Param("id")
+	id, _ := strconv.Atoi(idString)
+	dataBook, err := h.bookService.Update(id, bookRequest)
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": err.Error(),

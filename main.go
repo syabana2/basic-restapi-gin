@@ -39,9 +39,10 @@ func main() {
 	router := gin.Default()
 
 	v1 := router.Group("/v1")
-	v1.POST("/books", bookHandler.PostBooksHandler)
+	v1.POST("/books", bookHandler.PostBookHandler)
 	v1.GET("/books", bookHandler.GetBooksHandler)
 	v1.GET("/books/:id", bookHandler.GetBookHandler)
+	v1.PUT("books/:id", bookHandler.PutBookHandler)
 
 	err = router.Run(":5000")
 	helper.FatalIfError(err)

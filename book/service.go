@@ -6,6 +6,7 @@ type Service interface {
 	FindAll() ([]Book, error)
 	FindByID(ID int) (Book, error)
 	Create(bookRequest Request) (Book, error)
+	Update(ID int, bookRequest Request) (Book, error)
 }
 
 type service struct {
@@ -39,5 +40,23 @@ func (s *service) Create(bookRequest Request) (Book, error) {
 		Discount:    discount,
 	}
 	newBook, err := s.repository.Create(book)
+	return newBook, err
+}
+
+func (s *service) Update(ID int, bookRequest Request) (Book, error) {
+	book, err := s.repository.FindByID(ID)
+	helper.FatalIfError(err)
+
+	price := helper.ConvertInterfaceToInt(bookRequest.Price)
+	rating := helper.ConvertInterfaceToInt(bookRequest.Rating)
+	discount := helper.ConvertInterfaceToInt(bookRequest.Discount)
+
+	book.Title = bookRequest.Title
+	book.Price = price
+	book.Description = bookRequest.Description
+	book.Rating = rating
+	book.Discount = discount
+
+	newBook, err := s.repository.Update(book)
 	return newBook, err
 }
