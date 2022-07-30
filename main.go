@@ -43,6 +43,7 @@ func main() {
 	v1.GET("/books", bookHandler.GetBooksHandler)
 	v1.GET("/books/:id", bookHandler.GetBookHandler)
 	v1.PUT("books/:id", bookHandler.PutBookHandler)
+	v1.DELETE("books/:id", bookHandler.DeleteBookHandler)
 
 	err = router.Run(":5000")
 	helper.FatalIfError(err)
